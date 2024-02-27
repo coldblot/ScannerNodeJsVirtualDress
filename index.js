@@ -2,8 +2,18 @@ const express=require('express');
 
 const app=express();
 
-app.get('test',(req,res)=>{
+
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
+
+
+app.get('/test',(req,res)=>{
     res.send("Working!");
 })
 
-app.listen('2001',()=>{console.log('server started on port: 2001')})
+app.post("/imgdownload",(req,res)=>{
+    console.log("working");
+    res.send("img download!");
+});
+
+app.listen('10001',()=>{console.log('server started on port: 10001')})
