@@ -62,7 +62,23 @@ app.post("/imgdownload",(req,res)=>{
 app.get("/createqr",(req,res)=>{
   const qrImage=qrcode.image(`3.236.165.100:10001/downloadS3BucketImage`,{type:"png"});
   qrImage.pipe(fs.createWriteStream("qr_code.png"));
-  res.send("QrGenerated!")
+
+  qrImage.on('end', () => {
+    fs.readFile("qr_code.png", (err, data) => {
+      if (err) {
+        console.error("Error reading QR code file:", err);
+        res.status(500).send("Error generating QR code");
+      } else {
+        const base64QR = Buffer.from(data).toString('base64');
+        res.send(base64QR);
+      }
+    });
+  });
+
+  qrImage.on('error', (err) => {
+    console.error("Error generating QR code:", err);
+    res.status(500).send("Error generating QR code");
+  });
 });
 
 
