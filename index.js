@@ -1,7 +1,7 @@
 const express=require('express');
 const AWS = require('aws-sdk');
 const fs = require('fs');
-
+const qrcode=require("qr-image");
 const app=express();
 const accessKey = "AKIA275RJUHZ7GTGZYHB";
 const secretKey = "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";
@@ -25,12 +25,13 @@ app.get('/test',(req,res)=>{
 });
 app.use(bodyParser.raw({ type: 'image/*', limit: '10mb' }));
 
+let imageName;
 app.post("/imgdownload",(req,res)=>{
     
      // Get raw image binary data from request body
      const imgbinary = req.body.imgbinary;
      const imageBuffer = Buffer.from(imgbinary, 'base64');
-     let imageName=`received_image_${Date.now()}.png`;
+     imageName=`received_image_${Date.now()}.png`;
      const imagePath = path.join(__dirname, 'uploads',imageName);
  
      fs.writeFile(imagePath, imageBuffer, (err) => {
@@ -56,5 +57,36 @@ app.post("/imgdownload",(req,res)=>{
         }
     });
 });
+
+// Creation of qr with link
+app.get("/createqr",(req,res)=>{
+  const qrImage=qrcode.image(`http://localhost:10001/downloadS3BucketImage`,{type:"png"});
+  qrImage.pipe(fs.createWriteStream("qr_code.png"));
+  res.send("QrGenerated!")
+});
+
+
+app.get("/downloadS3BucketImage",async (req,res)=>{
+    try {
+        // Define S3 parameters
+        const params = {
+            Bucket: bucketName,
+            Key: imageName // Key is the filename of the image you want to download
+        };
+
+        // Download image from S3 bucket
+        const data = await s3.getObject(params).promise();
+
+        // Save image to local file system
+        const imagePath = path.join(__dirname, 'downloads', imageName); // Define path to save the image
+        fs.writeFileSync(imagePath, data.Body);
+        console.log(`File Download from s3 ${imageName}`)
+        // Send the downloaded image as a response
+        res.sendFile(imagePath);
+    } catch (err) {
+        console.error('Error downloading image:', err);
+        res.status(500).send('Error downloading image');
+    }
+})
 
 app.listen('10001',()=>{console.log('server started on port: 10001')})
