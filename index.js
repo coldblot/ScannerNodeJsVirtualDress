@@ -60,7 +60,7 @@ app.post("/imgdownload",(req,res)=>{
 
 // Creation of qr with link
 app.get("/createqr",(req,res)=>{
-  const qrImage=qrcode.image(`3.236.165.100:10001/downloadS3BucketImage`,{type:"png"});
+  const qrImage=qrcode.image(`ec2-3-236-165-100.compute-1.amazonaws.com:10001/downloadS3BucketImage`,{type:"png"});
   qrImage.pipe(fs.createWriteStream("qr_code.png"));
 
   qrImage.on('end', () => {
